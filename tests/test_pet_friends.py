@@ -25,6 +25,7 @@ def test_get_list_of_pets_valid_key(filter=''):
     status, result = pf.get_list_of_pets(auth_key, filter)
 
     # Проверка ответа: Статус 200 и список питомцев
+    print(result)
     assert status == 200
     assert len(result['pets']) > 0
 
@@ -76,7 +77,7 @@ def test_put_new_info_valid(
     assert result['name'] == pet_new_info['name']
 
 
-def test_post_new_for_pet_valid(pet_photo='images\Dog.jpeg'):
+def test_post_new_foto_for_pet_valid(pet_photo='images\Dog.jpeg'):
     """Проверяем возможность добавления или изменения фото питомцу,
     статус 200 и в теле ответа есть значение pеt_photo"""
     pet_photo = os.path.join(os.path.dirname(__file__), pet_photo)
@@ -103,7 +104,7 @@ def test_delete_pet_pass():
         _, pet_id = pf.get_list_of_pets(auth_key, 'my_pets')
 
     # Берём id первого питомца из списка и отправляем запрос на удаление
-    status, result = pf.delete_pet(auth_key, pet_id['pets'][1]['id'])
+    status, result = pf.delete_pet(auth_key, pet_id['pets'][0]['id'])
 
     # Ещё раз запрашиваем список своих питомцев
     _, my_pets = pf.get_list_of_pets(auth_key, 'my_pets')
@@ -139,8 +140,8 @@ def test_get_list_of_pets_invalid_key(filter=''):
 
 
 def test_post_new_pet_with_empty_data(name='', animal_type='', age=''):
-    """Проверяем возможность добавления питомца без фото.
-    Статус 200 в теле ответа есть добаленый питомец с указанным именем"""
+    """Проверяем возможность добавления c пустыми данными.
+    Статус 400 в теле ответа сообщение что поля name, animal_type, age обязательные"""
 
     # Получаем ключ auth_key и добавляем нового питомца без фото
     _, auth_key = pf.get_api_key(valid_email, valid_password)
@@ -149,3 +150,25 @@ def test_post_new_pet_with_empty_data(name='', animal_type='', age=''):
     # Проверка ответа: Статус 400, что поля name, animal_type, age обязательные
     assert status == 400
     assert 'Name, animal_type, age is required' in result
+
+
+def test_delete_not_my_pet_pass():
+    """Проверяем возможность удаления чужого питомца"""
+    # Получаем ключ auth_key, и проверяем есть ли свои питомцы
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, pet_id = pf.get_list_of_pets(auth_key, 'my_pets')
+    """Проверяем - если список своих питомцев не пустой,
+    то удаляем всех своих питомцев, что бы они не попали во общий список"""
+    if len(pet_id['pets']) != 0:
+       for i in range(len(pet_id['pets'])):
+            _, result = pf.delete_pet(auth_key, pet_id['pets'][i]['id'])
+
+    # Берём id первого питомца из общего списка и отправляем запрос на удаление
+    _, pet_id = pf.get_list_of_pets(auth_key, '')
+    status, result = pf.delete_pet(auth_key, pet_id['pets'][0]['id'])
+
+    # Ещё раз запрашиваем список своих питомцев
+    _, my_pets = pf.get_list_of_pets(auth_key, 'my_pets')
+    '''Проверяем, что статус ответа равен 200, в общем списке питомцев нет id удалённого питомца'''
+    assert status == 200
+    assert pet_id['pets'][0]['id'] not in my_pets.values()
