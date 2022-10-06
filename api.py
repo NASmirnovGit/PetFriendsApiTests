@@ -50,7 +50,6 @@ class PetFriends:
             result = res.text
         return status, result
 
-
     def post_pet_with_photo(self, auth_key: json, name: str, animal_type:str, age: str, pet_photo: str) -> json:
         """Метод делает запрос к API сервера на добавление питомца с фото и возвращает статус запроса и результат
         в формате JSON с информацией о добаленом питомце"""
@@ -97,5 +96,19 @@ class PetFriends:
         try:
             result = res.json()
         except :
+            result = res.text
+        return status, result
+
+    def post_new_foto_for_pet(self, auth_key: json, pet_id: str, pet_photo: str) -> json:
+        """Метод делает запрос к API сервера на добавление фото в карточку питомца без фото"""
+        data = MultipartEncoder(
+            fields={'pet_photo': (pet_photo, open(pet_photo, 'rb'), 'image/jpeg')})
+        headers = {'auth_key': auth_key['key'], 'Content-Type': data.content_type}
+        res = requests.post(self.base_url + 'api/pets/set_photo/'+ pet_id, headers=headers, data=data)
+        status = res.status_code
+        result = ''
+        try:
+            result = res.json()
+        except:
             result = res.text
         return status, result

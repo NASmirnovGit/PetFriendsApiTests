@@ -40,7 +40,6 @@ def test_post_pet_without_photo_valid(
     assert status == 200
     assert result['name'] == pet_without_photo['name']
 
-
 def test_post_pet_with_photo_valid(
         name= pet_without_photo['name'],
         animal_type= pet_without_photo['animal_type'],
@@ -73,6 +72,19 @@ def test_put_new_info_valid(
     assert status == 200
     assert result['name'] == pet_new_info['name']
 
+def test_post_foto_for_pet_without_foto(pet_photo= 'images\Dog.jpeg'):
+    """Проверяем возможность добавления или изменения фото питомцу, статус 200 и в теле ответа есть значение pеt_photo"""
+    pet_photo = os.path.join(os.path.dirname(__file__), pet_photo)
+
+    # Получаем ключ auth_key, id питомца и добавляем фото
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, pet_id = pf.get_list_of_pets(auth_key, 'my_pets')
+    status, result = pf.post_new_foto_for_pet(auth_key,  pet_id['pets'][0]['id'], pet_photo)
+    # Проверка ответа: Статус 200 и в теле ответа есть значение pеt_photo
+    print(result)
+    assert status == 200
+    assert len(result['pet_photo']) > 0
+
 def test_delete_pet_pass():
     """Проверяем возможность удаления питомца"""
 
@@ -85,7 +97,7 @@ def test_delete_pet_pass():
         _, pet_id = pf.get_list_of_pets(auth_key, 'my_pets')
 
     # Берём id первого питомца из списка и отправляем запрос на удаление
-    status, result = pf.delete_pet(auth_key, pet_id['pets'][0]['id'])
+    status, result = pf.delete_pet(auth_key, pet_id['pets'][1]['id'])
 
     # Ещё раз запрашиваем список своих питомцев
     _, my_pets = pf.get_list_of_pets(auth_key, 'my_pets')
@@ -94,4 +106,6 @@ def test_delete_pet_pass():
     assert status == 200
     assert pet_id['pets'][0]['id'] not in my_pets.values()
     assert len(result) == 0
+
+
 
